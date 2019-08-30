@@ -1,10 +1,11 @@
 import sys
 from PyQt5 import QtWidgets, QtCore, QtGui
-import pyqtgraph as pg
-from log_reader import readLogFile
 
-pg.setConfigOption('background', 'w')
-pg.setConfigOption('foreground', 'k')
+from matplotlib.backends.backend_qt5agg import (
+    FigureCanvasQTAgg, NavigationToolbar2QT)
+from matplotlib import pyplot
+
+from log_reader import readLogFile
 
 
 class Viewer(QtWidgets.QMainWindow):
@@ -50,15 +51,16 @@ class Viewer(QtWidgets.QMainWindow):
 
         central_layout = QtWidgets.QGridLayout(central_widget)
 
-        # date_axis = pg.graphicsItems.DateAxisItem.DateAxisItem(
-        #     orientation='bottom')
-        self.plot_widget = pg.PlotWidget(
-            # axisItems={"bottom": date_axis}
-        )
-        plotItem = self.plot_widget.getPlotItem()
-        plotItem.showAxis('right')
-        plotItem.showAxis('top')
-        central_layout.addWidget(self.plot_widget, 0, 1, 1, 7)
+        self.figure, self.ax = pyplot.subplots(1, 1)
+        self.ax.set_xlabel('Time')
+        self.ax.set_ylabel('Something')
+        self.plot_canvas = FigureCanvasQTAgg(self.figure)
+        plot_toolbar = NavigationToolbar2QT(self.plot_canvas, self)
+
+        plot_layout = QtWidgets.QVBoxLayout()
+        plot_layout.addWidget(self.plot_canvas)
+        plot_layout.addWidget(plot_toolbar)
+        central_layout.addLayout(plot_layout, 0, 1, 7, 7)
 
     def openFiles(self, *, filenames=None):
         if filenames is None:
@@ -75,19 +77,23 @@ class Viewer(QtWidgets.QMainWindow):
             self, 'Open File')
 
     def plotData(self):
-        # plotitem = self.plot_widget.getPlotItem()
-
-        self.plot_widget.clear()
+        self.ax.clear()
         for i, data in enumerate(self.log_data):
-            self.plot_widget.plot(
-                data["Time"].dt.total_seconds() / 60,
-                data["GAUGE-G41.p[mBar]"],
-                pen=(i, len(self.log_data)),
-            )
+            self.ax.plot(data["Time"], data["GENERATOR-PS-41.I[A]"])
+
+        self.plot_canvas.draw()
 
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     viewer = Viewer()
     viewer.show()
+
+    viewer.openFiles(filenames=[
+        "../Data/Heating_1hr_480C.prc_2019-03-06_15-19-38" +
+        "_ProcessLog-Deposition System - TU Eindhoven.txt",
+        "../Data/Heating_1hr_350C_5h_480C.prc_2019-03-13_10-24-11_" +
+        "ProcessLog-Deposition System - TU Eindhoven.txt"
+    ])
+
     sys.exit(app.exec_())
