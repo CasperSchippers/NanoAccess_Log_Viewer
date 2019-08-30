@@ -22,3 +22,8 @@ def readLogFile(filename):
 
     return data
 
+
+if __name__ == '__main__':
+    print(readLogFile(
+        "../Data/Heating_1hr_480C.prc_2019-03-06_15-19-38_ProcessLog-Deposition System - TU Eindhoven.txt"
+    ))
