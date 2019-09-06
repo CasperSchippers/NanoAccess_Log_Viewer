@@ -59,7 +59,18 @@ class Viewer(QtWidgets.QMainWindow):
 
         plot_layout = QtWidgets.QVBoxLayout()
         plot_layout.addWidget(self.plot_canvas)
-        plot_layout.addWidget(plot_toolbar)
+        plotbar_layout = QtWidgets.QHBoxLayout()
+        plot_layout.addLayout(plotbar_layout)
+        plotbar_layout.addWidget(plot_toolbar)
+        self.x_data_selector = QtWidgets.QComboBox(self)
+        self.x_data_selector.setMinimumWidth(200)
+        self.y_data_selector = QtWidgets.QComboBox(self)
+        self.y_data_selector.setMinimumWidth(200)
+        self.x_data_selector.currentIndexChanged.connect(self.plotData)
+        self.y_data_selector.currentIndexChanged.connect(self.plotData)
+        plotbar_layout.addStretch()
+        plotbar_layout.addWidget(self.x_data_selector)
+        plotbar_layout.addWidget(self.y_data_selector)
         central_layout.addLayout(plot_layout, 0, 1, 7, 7)
 
     def openFiles(self, *, filenames=None):
@@ -70,7 +81,14 @@ class Viewer(QtWidgets.QMainWindow):
 
         self.log_data = [readLogFile(file) for file in self.filenames]
 
-        self.plotData()
+        columns = self.log_data[0].columns
+        self.x_data_selector.addItems(columns)
+        self.y_data_selector.addItems(columns)
+
+        self.x_data_selector.setCurrentIndex(0)
+        self.y_data_selector.setCurrentIndex(1)
+
+        # self.plotData()
 
     def selectFiles(self):
         self.filenames, _ = QtWidgets.QFileDialog.getOpenFileNames(
@@ -78,8 +96,14 @@ class Viewer(QtWidgets.QMainWindow):
 
     def plotData(self):
         self.ax.clear()
-        for i, data in enumerate(self.log_data):
-            self.ax.plot(data["Time"], data["GENERATOR-PS-41.I[A]"])
+        x_col = self.x_data_selector.currentText()
+        y_col = self.y_data_selector.currentText()
+
+        try:
+            for i, data in enumerate(self.log_data):
+                self.ax.plot(data[x_col], data[y_col])
+        except KeyError:
+            return
 
         self.plot_canvas.draw()
 
@@ -89,11 +113,11 @@ if __name__ == '__main__':
     viewer = Viewer()
     viewer.show()
 
-    viewer.openFiles(filenames=[
-        "../Data/Heating_1hr_480C.prc_2019-03-06_15-19-38" +
-        "_ProcessLog-Deposition System - TU Eindhoven.txt",
-        "../Data/Heating_1hr_350C_5h_480C.prc_2019-03-13_10-24-11_" +
-        "ProcessLog-Deposition System - TU Eindhoven.txt"
-    ])
+    # viewer.openFiles(filenames=[
+    #     "../Data/Heating_1hr_480C.prc_2019-03-06_15-19-38" +
+    #     "_ProcessLog-Deposition System - TU Eindhoven.txt",
+    #     "../Data/Heating_1hr_350C_5h_480C.prc_2019-03-13_10-24-11_" +
+    #     "ProcessLog-Deposition System - TU Eindhoven.txt"
+    # ])
 
     sys.exit(app.exec_())

@@ -14,6 +14,7 @@ def readLogFile(filename):
         parse_dates=['Time'],
         # date_parser=timeparser,
         delim_whitespace=True,
+        encoding="unicode escape"
     )
     data["Time"] = data["Time"] - data["Time"][0]
 
@@ -22,8 +23,3 @@ def readLogFile(filename):
 
     return data
 
-
-if __name__ == '__main__':
-    print(readLogFile(
-        "../Data/Heating_1hr_480C.prc_2019-03-06_15-19-38_ProcessLog-Deposition System - TU Eindhoven.txt"
-    ))
