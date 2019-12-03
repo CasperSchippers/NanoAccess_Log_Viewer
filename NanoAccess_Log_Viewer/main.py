@@ -18,8 +18,6 @@ class Viewer(QtWidgets.QMainWindow):
     proc_log_path = Path(config["DEFAULT"]["process_logs"])
     syst_log_path = Path(config["DEFAULT"]["system_logs"])
 
-    print(proc_log_path)
-
     Data = []
 
     def __init__(self):
@@ -65,27 +63,51 @@ class Viewer(QtWidgets.QMainWindow):
     def initUI(self):
         central_widget = QtWidgets.QWidget(self)
         self.setCentralWidget(central_widget)
+        central_layout = QtWidgets.QHBoxLayout(central_widget)
 
-        central_layout = QtWidgets.QGridLayout(central_widget)
-
-        self.file_system = QtWidgets.QFileSystemModel()
-        self.file_system.setRootPath('D:/Git/')
-        self.file_tree = QtWidgets.QTreeView()
-        self.file_tree.setModel(self.file_system)
-        central_layout.addWidget(self.file_tree, 0, 0)
+        self.initFileTree()
 
         self.plot_widget = pg.PlotWidget()
 
-
-        plot_layout = QtWidgets.QVBoxLayout()
-        plot_layout.addWidget(self.plot_widget)
         self.x_data_selector = QtWidgets.QComboBox(self)
         self.x_data_selector.setMinimumWidth(200)
         self.y_data_selector = QtWidgets.QComboBox(self)
         self.y_data_selector.setMinimumWidth(200)
         self.x_data_selector.currentIndexChanged.connect(self.plotData)
         self.y_data_selector.currentIndexChanged.connect(self.plotData)
-        central_layout.addLayout(plot_layout, 0, 1, 7, 7)
+
+        plot_layout_widget = QtWidgets.QWidget()
+        plot_layout = QtWidgets.QVBoxLayout(plot_layout_widget)
+        plot_layout.addWidget(self.plot_widget)
+        plot_layout.addWidget(self.x_data_selector)
+        plot_layout.addWidget(self.y_data_selector)
+
+        central_splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+        central_splitter.addWidget(self.file_tree)
+        central_splitter.setStretchFactor(0, 2)
+        central_splitter.addWidget(plot_layout_widget)
+        central_splitter.setStretchFactor(1, 3)
+        central_layout.addWidget(central_splitter)
+
+    def initFileTree(self):
+        self.file_tree = QtWidgets.QTreeView()
+
+        self.fs_model = QtWidgets.QFileSystemModel(self.file_tree)
+        self.fs_model.setNameFilterDisables(False)
+        self.fs_model.setRootPath(str(self.proc_log_path))
+
+        self.file_tree.setModel(self.fs_model)
+        self.file_tree.hideColumn(1)
+        self.file_tree.hideColumn(2)
+        self.file_tree.setColumnWidth(0, 200)
+
+        self.fs_model.setNameFilters(["*.txt"])
+
+        self.showDir(str(self.proc_log_path))
+
+        self.file_tree.setSortingEnabled(True)
+        self.file_tree.sortByColumn(3, 0)
+
 
     def openFiles(self, *, filenames=None):
         if filenames is None:
@@ -111,7 +133,10 @@ class Viewer(QtWidgets.QMainWindow):
     def selectDir(self):
         directory = QtWidgets.QFileDialog.getExistingDirectory(
             self, 'Select Directory')
-        self.file_tree.setRootIndex(self.file_system.index(directory))
+        self.showDir(directory)
+
+    def showDir(self, directory):
+        self.file_tree.setRootIndex(self.fs_model.index(directory))
 
     def plotData(self):
         x_col = self.x_data_selector.currentText()
