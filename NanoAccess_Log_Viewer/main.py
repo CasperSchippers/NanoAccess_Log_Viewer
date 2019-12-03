@@ -1,9 +1,9 @@
 import sys
 from PyQt5 import QtWidgets, QtCore, QtGui
 
-from matplotlib.backends.backend_qt5agg import (
-    FigureCanvasQTAgg, NavigationToolbar2QT)
-from matplotlib import pyplot
+import pyqtgraph as pg
+pg.setConfigOption('background', 'w')
+pg.setConfigOption('foreground', 'k')
 
 from log_reader import readLogFile
 
@@ -51,26 +51,17 @@ class Viewer(QtWidgets.QMainWindow):
 
         central_layout = QtWidgets.QGridLayout(central_widget)
 
-        self.figure, self.ax = pyplot.subplots(1, 1)
-        self.ax.set_xlabel('Time')
-        self.ax.set_ylabel('Something')
-        self.plot_canvas = FigureCanvasQTAgg(self.figure)
-        plot_toolbar = NavigationToolbar2QT(self.plot_canvas, self)
+        self.plot_widget = pg.PlotWidget()
+
 
         plot_layout = QtWidgets.QVBoxLayout()
-        plot_layout.addWidget(self.plot_canvas)
-        plotbar_layout = QtWidgets.QHBoxLayout()
-        plot_layout.addLayout(plotbar_layout)
-        plotbar_layout.addWidget(plot_toolbar)
+        plot_layout.addWidget(self.plot_widget)
         self.x_data_selector = QtWidgets.QComboBox(self)
         self.x_data_selector.setMinimumWidth(200)
         self.y_data_selector = QtWidgets.QComboBox(self)
         self.y_data_selector.setMinimumWidth(200)
         self.x_data_selector.currentIndexChanged.connect(self.plotData)
         self.y_data_selector.currentIndexChanged.connect(self.plotData)
-        plotbar_layout.addStretch()
-        plotbar_layout.addWidget(self.x_data_selector)
-        plotbar_layout.addWidget(self.y_data_selector)
         central_layout.addLayout(plot_layout, 0, 1, 7, 7)
 
     def openFiles(self, *, filenames=None):
@@ -95,17 +86,15 @@ class Viewer(QtWidgets.QMainWindow):
             self, 'Open File')
 
     def plotData(self):
-        self.ax.clear()
         x_col = self.x_data_selector.currentText()
         y_col = self.y_data_selector.currentText()
 
         try:
             for i, data in enumerate(self.log_data):
-                self.ax.plot(data[x_col], data[y_col])
+                self.plot_widget.plot(data[x_col], data[y_col])
         except KeyError:
             return
 
-        self.plot_canvas.draw()
 
 
 if __name__ == '__main__':
