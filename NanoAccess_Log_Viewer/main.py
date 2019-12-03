@@ -1,14 +1,24 @@
 import sys
 from PyQt5 import QtWidgets, QtCore, QtGui
 
+import configparser
+from pathlib import Path
+
 import pyqtgraph as pg
 pg.setConfigOption('background', 'w')
 pg.setConfigOption('foreground', 'k')
 
 from log_reader import readLogFile
 
+config = configparser.ConfigParser()
+config.read("locations.ini")
+
 
 class Viewer(QtWidgets.QMainWindow):
+    proc_log_path = Path(config["DEFAULT"]["process_logs"])
+    syst_log_path = Path(config["DEFAULT"]["system_logs"])
+
+    print(proc_log_path)
 
     Data = []
 
