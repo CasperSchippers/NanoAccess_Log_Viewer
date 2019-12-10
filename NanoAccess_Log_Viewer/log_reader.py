@@ -9,13 +9,16 @@ TD1 = pandas.Timedelta("1D")
 
 
 def readLogFile(filename):
-    data = pandas.read_csv(
-        filename,
-        parse_dates=['Time'],
-        # date_parser=timeparser,
-        delim_whitespace=True,
-        encoding="unicode escape"
-    )
+    try:
+        data = pandas.read_csv(
+            filename,
+            parse_dates=['Time'],
+            # date_parser=timeparser,
+            delim_whitespace=True,
+            encoding="unicode escape"
+        )
+    except ValueError:
+        return
     data["Time"] = data["Time"] - data["Time"][0]
 
     while any(data["Time"] < TD0):

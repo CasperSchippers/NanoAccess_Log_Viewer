@@ -1,8 +1,10 @@
 import sys
-from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt5 import QtWidgets, QtCore, QtGui, QtTest
 
 import configparser
 from pathlib import Path
+from multiprocessing import Pool
+from time import sleep
 
 import pyqtgraph as pg
 pg.setConfigOption('background', 'w')
@@ -18,10 +20,14 @@ class Viewer(QtWidgets.QMainWindow):
     proc_log_path = Path(config["DEFAULT"]["process_logs"])
     syst_log_path = Path(config["DEFAULT"]["system_logs"])
 
+    selected_files = list()
+
     Data = []
 
     def __init__(self):
         super().__init__()
+
+        self.pool = Pool(4)
 
         self.setWindowTitle('Log Viewer')
         self.resize(1280, 720)
@@ -101,13 +107,50 @@ class Viewer(QtWidgets.QMainWindow):
         self.file_tree.hideColumn(2)
         self.file_tree.setColumnWidth(0, 200)
 
+        self.file_tree.setSelectionMode(
+            QtGui.QAbstractItemView.ExtendedSelection)
+
+        self.file_tree.selectionModel().selectionChanged.connect(
+            self.loadSelection)
+
         self.fs_model.setNameFilters(["*.txt"])
+        # self.fs_model
 
         self.showDir(str(self.proc_log_path))
 
         self.file_tree.setSortingEnabled(True)
         self.file_tree.sortByColumn(3, 0)
 
+    def loadSelection(self, selected, deselected):
+        for index in selected.indexes():
+            file_index = self.fs_model.index(index.row(), 0, index.parent())
+            file = Path(self.fs_model.filePath(file_index))
+
+            if file.is_file() and file not in self.selected_files:
+                self.selected_files.append(file)
+
+        for index in deselected.indexes():
+            file_index = self.fs_model.index(index.row(), 0, index.parent())
+            file = Path(self.fs_model.filePath(file_index))
+
+            try:
+                self.selected_files.remove(file)
+            except ValueError:
+                pass
+
+        self.readSelection()
+        self.plotSelection()
+
+    def readSelection(self):
+        results = self.pool.map_async(readLogFile, self.selected_files)
+
+        while not results.ready():
+            QtTest.QTest.qWait(1)
+
+        self.data = [result for result in results.get() if result is not None]
+
+    def plotSelection(self):
+        pass
 
     def openFiles(self, *, filenames=None):
         if filenames is None:
