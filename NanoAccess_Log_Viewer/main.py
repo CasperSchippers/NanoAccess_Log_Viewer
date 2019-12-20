@@ -7,13 +7,28 @@ from multiprocessing import Pool
 from time import sleep
 
 import pyqtgraph as pg
-pg.setConfigOption('background', 'w')
-pg.setConfigOption('foreground', 'k')
+pg.setConfigOption("background", "w")
+pg.setConfigOption("foreground", "k")
 
 from log_reader import readLogFile
 
 config = configparser.ConfigParser()
 config.read("locations.ini")
+
+columns = [
+    "Time",
+    "MOTOR-M-SST2.Pos[mm]",
+    "HEATER-ETS-41.Mode",
+    "HEATER-ETS-41.WSP",
+    "HEATER-ETS-41.PV1",
+    "HEATER-ETS-41.SPP",
+    "GENERATOR-PS-41.P[W]",
+    "GENERATOR-PS-41.U[V]",
+    "GENERATOR-PS-41.I[A]",
+    "GAUGE-G41.p[mBar]",
+    "CHAMBER-PREP.State",
+
+]
 
 
 class Viewer(QtWidgets.QMainWindow):
@@ -29,7 +44,7 @@ class Viewer(QtWidgets.QMainWindow):
 
         self.pool = Pool(4)
 
-        self.setWindowTitle('Log Viewer')
+        self.setWindowTitle("Log Viewer")
         self.resize(1280, 720)
 
         self.initMenuBar()
@@ -39,7 +54,7 @@ class Viewer(QtWidgets.QMainWindow):
     def initMenuBar(self):
         menubar = self.menuBar()
 
-        file_menu = menubar.addMenu('&File')
+        file_menu = menubar.addMenu("&File")
 
         open_file = file_menu.addAction("&Open File")
         open_file.setStatusTip("Select and open file")
@@ -79,6 +94,10 @@ class Viewer(QtWidgets.QMainWindow):
         self.x_data_selector.setMinimumWidth(200)
         self.y_data_selector = QtWidgets.QComboBox(self)
         self.y_data_selector.setMinimumWidth(200)
+        self.x_data_selector.addItems(columns)
+        self.y_data_selector.addItems(columns)
+        self.x_data_selector.setCurrentIndex(3)
+        self.y_data_selector.setCurrentIndex(1)
         self.x_data_selector.currentIndexChanged.connect(self.plotData)
         self.y_data_selector.currentIndexChanged.connect(self.plotData)
 
@@ -138,16 +157,16 @@ class Viewer(QtWidgets.QMainWindow):
             except ValueError:
                 pass
 
-        self.readSelection()
-        self.plotSelection()
+        self.openFiles(filenames=self.selected_files)
+        self.plotData()
 
-    def readSelection(self):
-        results = self.pool.map_async(readLogFile, self.selected_files)
+    # def readSelection(self):
+    #     results = self.pool.map_async(readLogFile, self.selected_files)
 
-        while not results.ready():
-            QtTest.QTest.qWait(1)
+    #     while not results.ready():
+    #         QtTest.QTest.qWait(1)
 
-        self.data = [result for result in results.get() if result is not None]
+    #     self.data = [result for result in results.get() if result is not None]
 
     def plotSelection(self):
         pass
@@ -158,41 +177,51 @@ class Viewer(QtWidgets.QMainWindow):
         else:
             self.filenames = filenames
 
-        self.log_data = [readLogFile(file) for file in self.filenames]
+        if len(filenames) == 0:
+            return
 
-        columns = self.log_data[0].columns
-        self.x_data_selector.addItems(columns)
-        self.y_data_selector.addItems(columns)
+        results = self.pool.map_async(readLogFile, self.selected_files)
 
-        self.x_data_selector.setCurrentIndex(0)
-        self.y_data_selector.setCurrentIndex(1)
+        while not results.ready():
+            QtTest.QTest.qWait(10)
+
+        self.log_data = [result for result in results.get()
+                         if result is not None]
+
+        print(self.log_data[0].columns)
 
         # self.plotData()
 
     def selectFiles(self):
         self.filenames, _ = QtWidgets.QFileDialog.getOpenFileNames(
-            self, 'Open File')
+            self, "Open File")
 
     def selectDir(self):
         directory = QtWidgets.QFileDialog.getExistingDirectory(
-            self, 'Select Directory')
+            self, "Select Directory")
         self.showDir(directory)
 
     def showDir(self, directory):
         self.file_tree.setRootIndex(self.fs_model.index(directory))
 
     def plotData(self):
+        if len(self.log_data) == 0:
+            return
+
         x_col = self.x_data_selector.currentText()
         y_col = self.y_data_selector.currentText()
 
         try:
             for i, data in enumerate(self.log_data):
-                self.plot_widget.plot(data[x_col], data[y_col])
+                x_data = data[x_col]
+                y_data = data[y_col]
+                print(x_data.dtype)
+                self.plot_widget.plot(x_data, y_data)
         except KeyError:
             return
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     viewer = Viewer()
     viewer.show()
