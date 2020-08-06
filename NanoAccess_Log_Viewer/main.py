@@ -107,12 +107,20 @@ class Viewer(QtWidgets.QMainWindow):
         plot_layout.addWidget(self.x_data_selector)
         plot_layout.addWidget(self.y_data_selector)
 
-        central_splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
-        central_splitter.addWidget(self.file_tree)
-        central_splitter.setStretchFactor(0, 2)
-        central_splitter.addWidget(plot_layout_widget)
-        central_splitter.setStretchFactor(1, 3)
-        central_layout.addWidget(central_splitter)
+        central_layout.addWidget(plot_layout_widget)
+
+        ftree_widget = QtWidgets.QDockWidget("File Tree", self)
+        ftree_widget.setWidget(self.file_tree)
+        ftree_widget.setFeatures(ftree_widget.features() & ~QtWidgets.QDockWidget.DockWidgetClosable)
+
+        plot_select_widget = QtWidgets.QDockWidget("Plot Selector", self)
+        plot_select_widget.setFeatures(plot_select_widget.features() & ~QtWidgets.QDockWidget.DockWidgetClosable)
+
+        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, ftree_widget)
+        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, plot_select_widget)
+
+
+
 
     def initFileTree(self):
         self.file_tree = QtWidgets.QTreeView()
