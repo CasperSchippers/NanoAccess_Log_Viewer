@@ -27,7 +27,30 @@ columns = [
     "GENERATOR-PS-41.I[A]",
     "GAUGE-G41.p[mBar]",
     "CHAMBER-PREP.State",
-
+    'GENERATOR-DCS-22.P[W]', 'GENERATOR-DCS-22.U[V]',
+       'GENERATOR-DCS-22.I[mA]', 'GENERATOR-DCS-22.Source',
+       'GENERATOR-DCS-21.P[W]', 'GENERATOR-DCS-21.U[V]',
+       'GENERATOR-DCS-21.I[mA]', 'GENERATOR-DCS-21.Source',
+       'GENERATOR-DCS-23.P[W]', 'GENERATOR-DCS-23.U[V]',
+       'GENERATOR-DCS-23.I[mA]', 'GENERATOR-DCS-23.Source',
+       'GENERATOR-DCS-24.P[W]', 'GENERATOR-DCS-24.U[V]',
+       'GENERATOR-DCS-24.I[mA]', 'GENERATOR-DCS-24.Source',
+       'GENERATOR-DCS-25.P[W]', 'GENERATOR-DCS-25.U[V]',
+       'GENERATOR-DCS-25.I[mA]', 'GENERATOR-DCS-25.Source',
+       'GENERATOR-DCS-26.P[W]', 'GENERATOR-DCS-26.U[V]',
+       'GENERATOR-DCS-26.I[mA]', 'GENERATOR-DCS-26.Source',
+       'GENERATOR-RFAE-21.P[W]', 'GENERATOR-RFAE-21.Source',
+       'GENERATOR-RFAE-23.P[W]', 'GENERATOR-RFAE-23.Source',
+       'GENERATOR-RFAE-22.P[W]', 'GENERATOR-RFAE-22.Source',
+       'GAUGE-G22.p[mBar]', 'MAGNETRON-MAGN-201.Material',
+       'MAGNETRON-MAGN-202.Material', 'MAGNETRON-MAGN-203.Material',
+       'MAGNETRON-MAGN-204.Material', 'MAGNETRON-MAGN-205.Material',
+       'MAGNETRON-MAGN-206.Material', 'MAGNETRON-MAGN-207.Material',
+       'MAGNETRON-MAGN-208.Material', 'MAGNETRON-MAGN-209.Material',
+       'MAGNETRON-MAGN-210.Material', 'MAGNETRON-MAGN-211.Material',
+       'MAGNETRON-MAGN-212.Material', 'MOTOR-M-MT2.Pos[mm]',
+       'MOTOR-M-MR2.Pos[°]', 'MOTOR-M-SST2.Pos[mm]', 'MOTOR-M-SR2.Pos[°]',
+       'MOTOR-M-SR2.Pos[°].1'
 ]
 
 
@@ -216,7 +239,7 @@ class Viewer(QtWidgets.QMainWindow):
         if len(self.log_data) == 0:
             return
 
-        x_col = self.x_data_selector.currentText()
+        x_col = "Time"
         y_col = self.y_data_selector.currentText()
 
         try:
